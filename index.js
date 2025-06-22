@@ -8,7 +8,6 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 client.commands = new Collection();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
-const characters = {};
 
 for (const file of commandFiles)
 {
@@ -23,7 +22,6 @@ for (const file of commandFiles)
 // When the client is ready, run this code (only once)
 client.once('ready', () => {
 	console.log('Ready!');
-	setInterval(function(){LoadCharacters(characters)}, 60000);
 });
 
 // Command listener
