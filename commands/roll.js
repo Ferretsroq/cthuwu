@@ -5,130 +5,41 @@ module.exports =
 {
 	data: new SlashCommandBuilder()
 	.setName('roll')
-	.setDescription('Roll a skill!')
+	.setDescription('Roll dice!')
 	.addNumberOption(option =>
-		option.setName('skill')
-		.setDescription('The value of your skill')
+		option.setName('num')
+		.setDescription('The number of dice to roll')
 		.setRequired(true))
-    .addStringOption(option =>
-        option.setName('for')
-        .setDescription('What this roll is for')
+    .addNumberOption(option =>
+        option.setName('size')
+        .setDescription('The size of dice to roll')
         .setRequired(true))
 	.addNumberOption(option =>
 		option.setName('bonus')
-		.setDescription('The number of bonus dice')
-		.setRequired(false))
-	.addNumberOption(option =>
-		option.setName('penalty')
-		.setDescription('The number of penalty dice')
+		.setDescription('The bonus to add to to roll')
 		.setRequired(false)),
 
 	async execute(interaction)
 	{
+        let num = interaction.options.getNumber('num');
+        let size = interaction.options.getNumber('size');
 		let bonus = interaction.options.getNumber('bonus');
-		let penalty = interaction.options.getNumber('penalty');
+        if(bonus == null)
+        {
+            bonus = 0;
+        }
         let resultText = `${userMention(interaction.user.id)}\n`;
-		let skillName = interaction.options.getString('for');
-		let skillValue = interaction.options.getNumber('skill');
-		let half = Math.floor(skillValue/2);
-		let fifth = Math.floor(skillValue/5);
-		let roll = 100;
-		let tensValue = 0;
-		let tensText = "";
 
-		if(bonus == null && penalty == null)
-		{
-			roll = 1 + Math.floor(Math.random()*100);
-		}
-        else if(bonus != null && penalty == null)
-		{
-			let tens = [];
-			let ones = Math.floor(Math.random()*10);
-			for(let tensIndex = 0; tensIndex < bonus+1; tensIndex++)
-			{
-				tens.push(Math.floor(Math.random()*10));
-			}
-			if(Math.min(...tens) == 0 && ones == 0)
-			{
-				tens.sort();
-				tensValue = tens[tens.findIndex(val=>val>0)];
-			}
-			else
-			{
-				tensValue = Math.min(...tens);
-			}
-			roll = tensValue*10 + ones;
-			if(roll == 0)
-			{
-				roll = 100;
-			}
-			tensText = `\n\nTens dice rolled: ${tens}`;
-		}
-		else if(bonus == null && penalty != null)
-		{
-			let tens = [];
-			let ones = Math.floor(Math.random()*10);
-			for(let tensIndex = 0; tensIndex < penalty+1; tensIndex++)
-			{
-				tens.push(Math.floor(Math.random()*10));
-			}
-			roll = Math.max(...tens)*10 + ones;
-			if(roll == 0)
-			{
-				roll = 100;
-			}
-			tensText = `\n\nTens dice rolled: ${tens}`;
-		}
-		else
-		{
-			let numTens = bonus - penalty;
-			let tens = [];
-			let ones = Math.floor(Math.random()*10);
-			let tensValue = 0;
-			for(let tensIndex = 0; tensIndex < Math.abs(numTens)+1; tensIndex++)
-			{
-				tens.push(Math.floor(Math.random()*10));
-			}
-			if(numTens >= 0)
-			{
-				if(Math.min(...tens) == 0 && ones == 0)
-				{
-					tens.sort();
-					tensValue = tens[tens.findIndex(val=>val>0)];
-				}
-				else
-				{
-					tensValue = Math.min(...tens);
-				}
-				roll = tensValue*10 + ones;
-			}
-			else
-			{
-				roll = Math.max(...tens)*10 + ones;
-			}
-			if(roll == 0)
-			{
-				roll = 100;
-			}
-			tensText = `\n\nTens dice rolled: ${tens}`;
-		}
-		if(roll <= fifth)
-		{
-			resultText += `**Critical Success** for ${skillName} (${roll} out of ${skillValue})`;
-		}
-		else if(roll <= half)
-		{
-			resultText += `**Half Success** for ${skillName} (${roll} out of ${skillValue})\n Fifth Success: ${fifth} [:fire: ${roll-fifth} Luck]`;
-		}
-		else if(roll <= skillValue)
-		{
-			resultText += `**Success** for ${skillName} (${roll} out of ${skillValue})\n Half Success: ${half} [:fire: ${roll-half} Luck]\n Fifth Success: ${fifth} [:fire: ${roll-fifth} Luck]`;
-		}
-		else
-		{
-			resultText += `**Fail** for ${skillName} (${roll} out of ${skillValue})\n Success: ${skillValue} [:fire: ${roll-skillValue} Luck]\n Half Success: ${half} [:fire: ${roll-half} Luck]\n Fifth Success: ${fifth} [:fire: ${roll-fifth} Luck]`;
-		}
-		resultText += tensText;
+        let roll = 0;
+        let rolls = [];
+        for(let rollNum = 0; rollNum < num; rollNum++)
+        {
+            rolls.push(Math.floor(Math.random()*size)+1);
+        }
+        roll = rolls.reduce((a, b) => a + b, 0) + bonus;
+		resultText += `**${roll}**\n-# ${num}d${size}+${bonus}: ${rolls.join('+')}+${bonus}`;
+
+
 		await interaction.reply({content: resultText})
 	},
 }
